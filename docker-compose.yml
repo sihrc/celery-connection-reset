@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+  rabbitmq:
+    image: rabbitmq:latest
+    environment:
+        RABBITMQ_DEFAULT_USER: user
+        RABBITMQ_DEFAULT_PASS: password
+        RABBITMQ_ERLANG_COOKIE: cookie
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_volume:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--appendonly", "no"]
+
+  app:
+    tty: true
+    build: .
+    volumes:
+      - .:/app
+    entrypoint: bash
+
+  worker:
+    build: .
+    volumes:
+      - .:/app
+      - ./celeryd.conf:/etc/default/celeryd
+    entrypoint: ./bin/start_celery.sh
+
+volumes:
+  redis_volume:
